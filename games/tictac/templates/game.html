@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <style>
+        body{
+            background-color:black;
+            color:white;
+        }
+        #board {
+             height:600px;
+            width:600px;
+        }
+        .board1{
+            border-style:solid;
+            border-color:white;
+            border-width:3px;
+        }
+
+        .board
+        {
+            display:flex;
+            height:195px;
+            width:195px;
+            border-style:solid;
+            border-color:white;
+            border-width:3px;
+            justify-content:space-around;
+            font-size:40px;
+        }
+        .row{
+            display:flex;
+            flex-direction:row;
+            justify-content:space-around;
+        }
+        .player1{
+            background-color:red;
+        }
+        .player2{
+            background-color:green;
+        }
+        .gaminfo{
+            height:20px;
+            width:100%;
+        }
+    </style>
+</head>
+<body>{% csrf_token%}
+    <div class="gameinfo"><h3>THIS IS TICTAC GAME:</h3><h3 id="gameinfo">Player 1 Turn</h3></div>
+    <hr>
+
+    <hr>
+    <div id="board" class="board1">
+        <div class="row">
+            <div id="00" onclick="game(this)"  class="board">0</div>
+            <div id="01" onclick="game(this)"  class="board">0</div>
+            <div id="02" onclick="game(this)"  class="board">0</div>
+        </div>
+        <div class="row">
+            <div id="10" onclick="game(this)"  class="board">0</div>
+            <div id="11" onclick="game(this)" class="board">0</div>
+            <div id="12" onclick="game(this)" class="board">0</div>
+        </div>
+        <div class="row">
+            <div id="20" onclick="game(this)"  class="board">0</div>
+            <div id="21" onclick="game(this)" class="board">0</div>
+            <div id="22" onclick="game(this)" class="board">0</div>
+        </div>
+    </div>
+<script>
+    var number=0;
+    //Code to send post request through ajax starts here
+
+
+    function getCookie(name) {
+                var cookieValue = null;
+                if (document.cookie && document.cookie != '') {
+                    var cookies = document.cookie.split(';');
+                    for (var i = 0; i < cookies.length; i++) {
+                        var cookie = jQuery.trim(cookies[i]);
+                        // Does this cookie string begin with the name we want?
+                        if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+            var csrftoken = getCookie('csrftoken');
+
+            /*
+            The functions below will create a header with csrftoken
+            */
+
+            function csrfSafeMethod(method) {
+                // these HTTP methods do not require CSRF protection
+                return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+            }
+            function sameOrigin(url) {
+                // test that a given url is a same-origin URL
+                // url could be relative or scheme relative or absolute
+                var host = document.location.host; // host + port
+                var protocol = document.location.protocol;
+                var sr_origin = '//' + host;
+                var origin = protocol + sr_origin;
+                // Allow absolute or scheme relative URLs to same origin
+                return (url == origin || url.slice(0, origin.length + 1) == origin + '/') ||
+                    (url == sr_origin || url.slice(0, sr_origin.length + 1) == sr_origin + '/') ||
+                    // or any other URL that isn't scheme relative or absolute i.e relative.
+                    !(/^(\/\/|http:|https:).*/.test(url));
+            }
+
+            $.ajaxSetup({
+                beforeSend: function(xhr, settings) {
+                    if (!csrfSafeMethod(settings.type) && sameOrigin(settings.url)) {
+                        // Send the token to same-origin, relative URLs only.
+                        // Send the token only if the method warrants CSRF protection
+                        // Using the CSRFToken value acquired earlier
+                        xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                    }
+                }
+            });
+
+        //Code to send post request through ajax starts here
+
+    function game(id) {
+        if($(id).html()=="0") {
+            if(number==0) {
+                    $(id).addClass("player1");
+                    $(id).html("1");
+                    $("#gameinfo").html("Player 2 Turn");
+                number=1;
+            } else {
+                    $(id).addClass("player2");
+                    $(id).html("2");
+                    number = 0;
+                    $("#gameinfo").html("Player 1 Turn");
+            }
+            var all = $(".board").map(function() {
+                return this.innerHTML;
+            }).get();
+           $.ajax({
+                url:'/tictac/nextstep/',
+                type:'POST',
+                data: {
+                    'gamestatus':all,
+                },
+
+                success: function(json) {
+                    console.log(json);
+                    console.log("success");
+                },
+
+                error: function(xhr,errmsg,err) {
+                    console.log("Error");
+                }
+
+            });
+        } else {
+            alert("Invalid Move");
+        }
+
+
+
+    }
+</script>
+</body>
+</html>
